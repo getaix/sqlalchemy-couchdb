@@ -1,56 +1,64 @@
-# PyPI 发布快速指南
+# PyPI 发布配置指南（无需 Token）
 
-## 🚨 当前问题
+## ✨ 使用 Trusted Publishers
 
-GitHub Actions 发布失败：**403 Forbidden - Invalid authentication**
+PyPI Trusted Publishers 是官方推荐的发布方式，**无需手动管理 API Token**。
 
-## ✅ 快速修复步骤
+## 🚀 快速配置（仅需一次，3分钟）
 
-### 1. 获取 PyPI Token (5分钟)
+### 步骤 1: 在 PyPI 配置 Trusted Publisher
 
-访问：https://pypi.org/manage/account/token/
+访问：https://pypi.org/manage/account/publishing/
 
-- Token name: `github-actions-sqlalchemy-couchdb`
-- Scope: **Entire account** (首次发布)
-- 复制生成的 token (以 `pypi-` 开头)
+点击 "Add a new pending publisher"，填写：
 
-### 2. 添加到 GitHub (2分钟)
+```
+PyPI Project Name:  sqlalchemy-couchdb
+Owner:              getaix
+Repository name:    sqlalchemy-couchdb
+Workflow name:      publish.yml
+Environment name:   (留空)
+```
 
-访问：https://github.com/getaix/sqlalchemy-couchdb/settings/secrets/actions
+点击 "Add" 即可。
 
-- 点击 "New repository secret"
-- Name: `PYPI_API_TOKEN`
-- Secret: 粘贴 PyPI token
-- 点击 "Add secret"
-
-### 3. 重新运行发布 (1分钟)
+### 步骤 2: 重新运行发布
 
 访问：https://github.com/getaix/sqlalchemy-couchdb/actions
 
-- 找到失败的 workflow
-- 点击 "Re-run failed jobs"
+找到失败的 workflow，点击 "Re-run failed jobs"。
 
-## 📦 手动发布（备选）
+## ✅ 完成！
+
+配置完成后，以后发布新版本只需：
 
 ```bash
-# 1. 安装工具
-pip install build twine
+# 1. 更新版本号并提交
+git commit -am "release: v0.1.3"
 
-# 2. 构建包
-python -m build
-
-# 3. 上传（会提示输入 token）
-twine upload dist/*
+# 2. 创建并推送标签（自动触发发布）
+git tag v0.1.3
+git push origin main --tags
 ```
 
-使用 `__token__` 作为用户名，PyPI token 作为密码。
+GitHub Actions 会自动构建并发布到 PyPI！
 
 ## 📚 详细文档
 
-查看完整配置指南：[docs/dev/pypi-setup.md](./pypi-setup.md)
+查看完整配置指南：[docs/dev/trusted-publishers.md](./docs/dev/trusted-publishers.md)
 
 ## 🔗 相关链接
 
-- PyPI 账户：https://pypi.org/manage/account/
-- GitHub Secrets：https://github.com/getaix/sqlalchemy-couchdb/settings/secrets/actions
-- GitHub Actions：https://github.com/getaix/sqlalchemy-couchdb/actions
+- **PyPI 配置页面**: https://pypi.org/manage/account/publishing/
+- **GitHub Actions**: https://github.com/getaix/sqlalchemy-couchdb/actions
+- **官方文档**: https://docs.pypi.org/trusted-publishers/
+
+## 📦 手动发布（备选）
+
+如果需要手动发布：
+
+```bash
+pip install build twine
+python -m build
+twine upload dist/*  # 需要 PyPI 用户名和密码/token
+```
