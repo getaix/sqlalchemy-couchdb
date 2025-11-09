@@ -2,6 +2,90 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.2] - 2025-11-04
+
+### 📚 文档改进
+
+#### 完整文档体系建设
+1. **MkDocs 文档网站**
+   - ✅ 完整的 MkDocs Material 主题配置
+   - ✅ 专业的导航结构（入门/指南/API/开发/关于）
+   - ✅ 代码高亮、标签页、提示框等高级功能
+   - ✅ 修复端口冲突（改用8001端口）
+   - 📂 文件: `mkdocs.yml`, `docs/stylesheets/extra.css`
+
+2. **核心文档**
+   - ✅ 重构首页 `index.md`（使用 Markdown admonitions 替代 HTML）
+   - ✅ 简化路线图 `roadmap.md`（移除不相关的 AI 内容和长期目标）
+   - ✅ FAQ 文档重组（移至 `docs/faq/` 目录）
+   - ✅ 修复所有文档中的相对链接
+
+3. **开发者文档**
+   - ✅ 测试指南 `dev/testing.md`（完整的测试最佳实践）
+   - ✅ 性能优化指南 `dev/performance.md`（连接池、查询优化、批量操作）
+   - ✅ 代码规范 `dev/coding-standards.md`（PEP 8、类型提示、文档字符串）
+
+#### GitHub 社区标准
+1. **社区文档**
+   - ✅ 行为准则 `CODE_OF_CONDUCT.md`（Contributor Covenant 2.1）
+   - ✅ 安全策略 `SECURITY.md`（漏洞报告流程、安全最佳实践）
+
+2. **Issue 和 PR 模板**
+   - ✅ Bug 报告模板 `.github/ISSUE_TEMPLATE/bug_report.yml`
+   - ✅ 功能请求模板 `.github/ISSUE_TEMPLATE/feature_request.yml`
+   - ✅ 问题咨询模板 `.github/ISSUE_TEMPLATE/question.yml`
+   - ✅ PR 模板 `.github/PULL_REQUEST_TEMPLATE.md`
+
+### 🧪 测试增强
+
+1. **DBAPI 高级测试**
+   - ✅ 新增 50+ 测试用例覆盖 sync 和 async 模块
+   - ✅ 连接生命周期测试
+   - ✅ 事务和回滚测试
+   - ✅ 游标操作测试
+   - ✅ 错误处理和边界情况测试
+   - 📂 文件: `tests/test_dbapi_sync_advanced.py`, `tests/test_dbapi_async_advanced.py`
+
+### 🔧 代码改进
+
+1. **修复 SQLAlchemy 弃用警告**
+   - ✅ 修复 `declarative.py` 中的 `declarative_base` 导入
+   - ✅ 使用 SQLAlchemy 2.0 推荐的导入方式
+   - 📂 文件: `sqlalchemy_couchdb/orm/declarative.py`
+
+2. **类型提示改进**
+   - ✅ 在 DBAPI 模块中添加更完整的类型提示
+   - ✅ 改进异常处理代码的可读性
+   - 📂 文件: `dbapi/sync.py`, `dbapi/async_.py`, `dialect.py`
+
+### 🧹 项目清理
+
+1. **移除过时文档**
+   - ✅ 删除 13 个临时/过时的 Markdown 文档
+   - ✅ 清理重复和冗余的技术文档
+   - ✅ 整合内容到正式文档体系
+
+2. **代码示例**
+   - ✅ 新增 ORM 混合模式示例 `examples/orm_hybrid_approach.py`
+   - ✅ 新增仓储模式示例 `examples/repository_pattern.py`
+
+### 📊 测试状态
+
+- **总测试数**: 487 passed
+- **代码覆盖率**: 80%
+- **测试通过率**: 99.8%
+
+### 🔗 文档网站
+
+启动文档服务器:
+```bash
+mkdocs serve -a 127.0.0.1:8001
+```
+
+访问: http://127.0.0.1:8001
+
+---
+
 ## [0.1.1] - 2025-11-02 (晚上)
 
 ### ✨ 新增功能

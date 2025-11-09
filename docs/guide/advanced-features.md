@@ -460,9 +460,9 @@ python advanced_features.py
 ---
 
 **相关文档**:
-- [README.md](../README.md) - 项目概览
-- [FEATURES.md](FEATURES.md) - 核心功能
-- [TODO.md](../TODO.md) - 待办事项
+- [README.md](https://github.com/getaix/sqlalchemy-couchdb/blob/main/README.md) - 项目概览
+- 核心功能（见首页） - 核心功能
+- [TODO.md](https://github.com/getaix/sqlalchemy-couchdb/blob/main/TODO.md) - 待办事项
 
 **最后更新**: 2025-11-03
 **文档版本**: 1.0

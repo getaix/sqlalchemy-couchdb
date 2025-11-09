@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: 📚 文档
+    url: https://getaix.github.io/sqlalchemy-couchdb
+    about: 查看完整文档和使用指南
+  - name: 💬 讨论区
+    url: https://github.com/getaix/sqlalchemy-couchdb/discussions
+    about: 参与社区讨论，分享想法和经验
+  - name: 📧 安全问题
+    url: mailto:develop@getaix.tech
+    about: 报告安全漏洞（请勿公开发布）

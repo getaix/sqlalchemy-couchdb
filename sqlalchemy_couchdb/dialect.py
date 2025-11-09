@@ -430,6 +430,9 @@ class AsyncCouchDBDialect(CouchDBDialect):
     is_async = True
     supports_server_side_cursors = False
 
+    # 禁用语句缓存（与基类相同，显式声明以确保生效）
+    supports_statement_cache = False
+
     @classmethod
     def import_dbapi(cls):
         """
@@ -513,9 +516,13 @@ class AsyncCouchDBDialect(CouchDBDialect):
             cursor: 异步 DBAPI Cursor 对象
             statement: 编译后的 SQL 语句（实际上是 JSON 字符串）
             parameters: 参数字典
-            context: 执行上下文
+            context: 执行上下文（包含 ORM 需要的 compile_state）
         """
         from sqlalchemy.util import await_only
+
+        # 保存 context 到 cursor，供结果处理使用
+        if hasattr(cursor, '_sqlalchemy_context'):
+            cursor._sqlalchemy_context = context
 
         if parameters:
             await_only(cursor.execute(statement, parameters))

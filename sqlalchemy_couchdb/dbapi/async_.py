@@ -152,7 +152,19 @@ class AsyncCursor:
                 raise ProgrammingError(f"不支持的操作类型: {op_type}")
 
         except json.JSONDecodeError as e:
-            raise ProgrammingError(f"无法解析操作: {e}")
+            # 检测是否是原生 SQL（而不是编译后的 JSON）
+            if operation.strip().upper().startswith(('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER')):
+                raise ProgrammingError(
+                    f"CouchDB dialect 不支持原生 SQL 语句。\n"
+                    f"收到的语句: {operation[:100]}{'...' if len(operation) > 100 else ''}\n\n"
+                    f"请使用 SQLAlchemy Core/ORM API 代替 text() 语句。\n"
+                    f"例如：\n"
+                    f"  ❌ 错误: session.execute(text('SELECT * FROM users'))\n"
+                    f"  ✅ 正确: session.execute(select(users_table))\n\n"
+                    f"CouchDB 使用 Mango Query，不是 SQL 数据库。"
+                )
+            else:
+                raise ProgrammingError(f"无法解析操作（期望 JSON 格式）: {e}\n操作内容: {operation[:100]}")
 
         return self
 
@@ -446,6 +458,18 @@ class AsyncCursor:
         """
         self._closed = True
         self._rows = []
+
+    async def _async_soft_close(self):
+        """
+        异步软关闭游标
+
+        SQLAlchemy 2.0+ 异步支持所需的方法。
+        "软"关闭意味着不清理结果数据，只做必要的清理工作。
+        在 CouchDB dialect 中，结果已经缓存在内存中，不需要额外清理。
+        """
+        # 软关闭：不清理结果，保持 _rows 和 _row_index 不变
+        # 这样用户仍然可以使用 fetchall() 等方法获取结果
+        pass
 
     def __iter__(self):
         """同步迭代器接口"""

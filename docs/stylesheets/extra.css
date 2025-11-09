@@ -1,0 +1,154 @@
+/* 自定义样式 */
+
+/* 代码块样式 */
+.md-typeset pre > code {
+    font-size: 0.85em;
+    line-height: 1.5;
+}
+
+/* 提示框样式 */
+.md-typeset .admonition {
+    border-left-width: 4px;
+}
+
+.md-typeset .admonition.note {
+    border-left-color: #2196F3;
+}
+
+.md-typeset .admonition.warning {
+    border-left-color: #FF9800;
+}
+
+.md-typeset .admonition.tip {
+    border-left-color: #4CAF50;
+}
+
+.md-typeset .admonition.important {
+    border-left-color: #F44336;
+}
+
+/* 表格样式 */
+.md-typeset table {
+    border-collapse: collapse;
+    margin: 1em 0;
+}
+
+.md-typeset table th {
+    background-color: var(--md-code-bg-color);
+    border-bottom: 2px solid var(--md-primary-fg-color);
+}
+
+/* API 文档样式 */
+.api-class {
+    background-color: #f5f5f5;
+    padding: 0.5em;
+    border-left: 4px solid #2196F3;
+    margin: 1em 0;
+}
+
+.api-method {
+    background-color: #fff;
+    padding: 0.5em;
+    border-left: 4px solid #4CAF50;
+    margin: 0.5em 0;
+}
+
+/* 特性标记样式 */
+.feature-badge {
+    display: inline-block;
+    padding: 0.25em 0.5em;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: bold;
+    margin-right: 0.5em;
+}
+
+.feature-complete {
+    background-color: #4CAF50;
+    color: white;
+}
+
+.feature-in-progress {
+    background-color: #FF9800;
+    color: white;
+}
+
+.feature-planned {
+    background-color: #9E9E9E;
+    color: white;
+}
+
+/* 性能指标样式 */
+.performance-metric {
+    display: inline-block;
+    padding: 0.5em 1em;
+    background-color: var(--md-code-bg-color);
+    border-radius: 4px;
+    margin: 0.5em;
+    font-family: monospace;
+}
+
+.performance-metric .label {
+    font-size: 0.8em;
+    color: var(--md-fg-color-muted);
+    display: block;
+}
+
+.performance-metric .value {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: var(--md-primary-fg-color);
+}
+
+/* SQL 示例样式 */
+.sql-example {
+    background-color: #f5f5f5;
+    padding: 1em;
+    border-radius: 4px;
+    border-left: 4px solid #2196F3;
+}
+
+.sql-example .sql {
+    font-family: monospace;
+    white-space: pre;
+}
+
+.sql-example .mango {
+    margin-top: 1em;
+    padding-top: 1em;
+    border-top: 1px dashed #ccc;
+    font-family: monospace;
+    white-space: pre;
+    color: #4CAF50;
+}
+
+/* 版本标记 */
+.version-badge {
+    display: inline-block;
+    padding: 0.2em 0.5em;
+    background-color: #2196F3;
+    color: white;
+    border-radius: 4px;
+    font-size: 0.9em;
+    font-weight: bold;
+}
+
+/* 图表容器 */
+.diagram {
+    background-color: var(--md-code-bg-color);
+    padding: 1em;
+    border-radius: 4px;
+    margin: 1em 0;
+    text-align: center;
+}
+
+/* 响应式设计 */
+@media screen and (max-width: 768px) {
+    .md-typeset table {
+        font-size: 0.8em;
+    }
+
+    .performance-metric .value {
+        font-size: 1.2em;
+    }
+}

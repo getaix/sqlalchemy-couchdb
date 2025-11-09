@@ -9,8 +9,7 @@ Declarative Base 支持 - 为 CouchDB 提供 SQLAlchemy ORM 风格的声明式�
 """
 
 from typing import Any, Dict, List, Optional, Type, TypeVar
-from sqlalchemy.ext.declarative import declarative_base as sa_declarative_base
-from sqlalchemy.orm import DeclarativeMeta
+from sqlalchemy.orm import declarative_base as sa_declarative_base, DeclarativeMeta
 from sqlalchemy import Column, MetaData, Index
 import logging
 

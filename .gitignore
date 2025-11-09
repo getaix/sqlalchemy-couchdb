@@ -195,3 +195,5 @@ tmp_*.py
 TODO.md
 CLAUDE.md
 CHANGELOG.md
+.ruff_cache/
+uv.lock

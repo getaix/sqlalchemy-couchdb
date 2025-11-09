@@ -165,7 +165,19 @@ class Cursor:
                 raise ProgrammingError(f"不支持的操作类型: {op_type}")
 
         except json.JSONDecodeError as e:
-            raise ProgrammingError(f"无法解析操作: {e}")
+            # 检测是否是原生 SQL（而不是编译后的 JSON）
+            if operation.strip().upper().startswith(('SELECT', 'INSERT', 'UPDATE', 'DELETE', 'CREATE', 'DROP', 'ALTER')):
+                raise ProgrammingError(
+                    f"CouchDB dialect 不支持原生 SQL 语句。\n"
+                    f"收到的语句: {operation[:100]}{'...' if len(operation) > 100 else ''}\n\n"
+                    f"请使用 SQLAlchemy Core/ORM API 代替 text() 语句。\n"
+                    f"例如：\n"
+                    f"  ❌ 错误: session.execute(text('SELECT * FROM users'))\n"
+                    f"  ✅ 正确: session.execute(select(users_table))\n\n"
+                    f"CouchDB 使用 Mango Query，不是 SQL 数据库。"
+                )
+            else:
+                raise ProgrammingError(f"无法解析操作（期望 JSON 格式）: {e}\n操作内容: {operation[:100]}")
 
         return self
 

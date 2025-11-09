@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "sqlalchemy-couchdb"
-version = "0.1.0"
+version = "0.1.2"
 description = "SQLAlchemy dialect for CouchDB with async support and hybrid database architecture"
 authors = [{name = "getaix", email = "develop@getaix.tech"}]
 readme = "README.md"

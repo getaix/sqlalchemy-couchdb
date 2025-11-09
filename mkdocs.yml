@@ -1,0 +1,212 @@
+# mkdocs 配置文件
+site_name: SQLAlchemy CouchDB 方言
+site_description: 功能强大的 SQLAlchemy 2.0+ CouchDB 驱动，支持同步/异步操作和混合数据库架构
+site_url: https://getaix.github.io/sqlalchemy-couchdb/
+repo_url: https://github.com/getaix/sqlalchemy-couchdb
+repo_name: getaix/sqlalchemy-couchdb
+edit_uri: edit/main/docs/
+
+# 版权信息
+copyright: Copyright &copy; 2025 SQLAlchemy CouchDB Contributors
+
+# 主题配置
+theme:
+  name: material
+  language: zh
+  palette:
+    # 浅色模式
+    - scheme: default
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-7
+        name: 切换到深色模式
+    # 深色模式
+    - scheme: slate
+      primary: blue
+      accent: light blue
+      toggle:
+        icon: material/brightness-4
+        name: 切换到浅色模式
+
+  # 字体
+  font:
+    text: Roboto
+    code: Roboto Mono
+
+  # 图标
+  icon:
+    repo: fontawesome/brands/github
+    edit: material/pencil
+    view: material/eye
+
+  # 功能特性
+  features:
+    # 内容
+    - content.action.edit          # 编辑按钮
+    - content.action.view          # 查看源码
+    - content.code.annotate        # 代码注释
+    - content.code.copy            # 代码复制
+    - content.tabs.link            # 标签页链接
+    - content.tooltips             # 工具提示
+
+    # 导航
+    - navigation.expand            # 展开导航
+    - navigation.footer            # 页脚导航
+    - navigation.indexes           # 索引页
+    - navigation.instant           # 即时加载
+    - navigation.instant.prefetch  # 预加载
+    - navigation.instant.progress  # 加载进度
+    - navigation.sections          # 导航分组
+    - navigation.tabs              # 顶部标签
+    - navigation.tabs.sticky       # 固定标签
+    - navigation.top               # 返回顶部
+    - navigation.tracking          # 锚点跟踪
+
+    # 搜索
+    - search.highlight             # 搜索高亮
+    - search.share                 # 搜索分享
+    - search.suggest               # 搜索建议
+
+    # 目录
+    - toc.follow                   # 目录跟随
+    - toc.integrate                # 目录集成
+
+# Markdown 扩展
+markdown_extensions:
+  # Python 代码高亮
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+
+  # 标签页
+  - pymdownx.tabbed:
+      alternate_style: true
+
+  # 任务列表
+  - pymdownx.tasklist:
+      custom_checkbox: true
+
+  # 提示框
+  - admonition
+  - pymdownx.details
+
+  # Emoji
+  - pymdownx.emoji:
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+
+  # 表格
+  - tables
+
+  # 脚注
+  - footnotes
+
+  # 属性列表
+  - attr_list
+  - md_in_html
+
+  # 定义列表
+  - def_list
+
+  # 缩写
+  - abbr
+
+  # 目录
+  - toc:
+      permalink: true
+      permalink_title: 锚点链接
+      toc_depth: 3
+
+# 额外 CSS
+extra_css:
+  - stylesheets/extra.css
+
+# 导航结构
+nav:
+  - 首页: index.md
+
+  - 快速开始:
+      - 安装: getting-started/installation.md
+      - 基础用法: getting-started/basic-usage.md
+      - 连接配置: getting-started/connection.md
+
+  - 用户指南:
+      - 同步操作: guide/sync-operations.md
+      - 异步操作: guide/async-operations.md
+      - SQL 转 Mango Query: guide/sql-to-mango.md
+      - 类型映射: guide/type-mapping.md
+      - 混合数据库模式: guide/hybrid-mode.md
+      - 高级特性: guide/advanced-features.md
+
+  - 示例:
+      - 示例集合: examples/index.md
+      - 高级特性: examples/advanced-features.md
+      - 性能基准: examples/performance.md
+
+  - API 参考:
+      - 方言 (Dialect): api/dialect.md
+      - 编译器 (Compiler): api/compiler.md
+      - 客户端 (Client): api/client.md
+      - 类型系统 (Types): api/types.md
+      - 异常处理 (Exceptions): api/exceptions.md
+
+  - 常见问题:
+      - FAQ: faq.md
+      - 故障排查: faq/troubleshooting.md
+      - 限制说明: faq/limitations.md
+
+  - 开发指南:
+      - 架构设计: dev/architecture.md
+      - 测试指南: dev/testing.md
+      - 代码规范: dev/coding-standards.md
+      - 性能优化: dev/performance.md
+
+  - 关于:
+      - 项目路线图: about/roadmap.md
+      - 贡献指南: about/contributing.md
+      - 许可证: about/license.md
+
+# 插件
+plugins:
+  - search:
+      lang:
+        - zh
+        - en
+      separator: '[\\s\\-]+'
+
+# 额外配置
+extra:
+  # 版本
+  version:
+    provider: mike
+    default: latest
+
+  # 社交链接
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/getaix/sqlalchemy-couchdb
+      name: GitHub 仓库
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/sqlalchemy-couchdb/
+      name: PyPI 包
+
+  # 状态
+  status:
+    new: 最近添加
+    deprecated: 已废弃
+
+# 构建配置
+strict: false  # 改为 false 以允许缺失的链接
+use_directory_urls: true
+
+# 开发服务器
+dev_addr: '127.0.0.1:8001'
