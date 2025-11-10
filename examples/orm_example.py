@@ -9,7 +9,7 @@ CouchDB ORM 使用示例
 """
 
 from sqlalchemy import create_engine, Column, String, Integer, DateTime
-from sqlalchemy_couchdb.orm import declarative_base, relationship, ForeignKey, sessionmaker
+from sqlalchemy_couchdb.orm import declarative_base, relationship, sessionmaker
 from datetime import datetime
 
 
@@ -49,7 +49,9 @@ class Post(Base):
     id = Column(String, primary_key=True)
     title = Column(String, nullable=False)
     content = Column(String)
-    author_id = Column(String, ForeignKey("users.id"))
+    # 注意：CouchDB 不支持传统外键约束
+    # 关系通过文档引用（字段值）实现
+    author_id = Column(String)  # 存储用户ID的引用
     created_at = Column(DateTime, default=datetime.now)
 
     # 关系定义：一个帖子属于一个用户
