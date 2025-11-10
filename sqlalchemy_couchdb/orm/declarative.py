@@ -35,7 +35,10 @@ class CouchDBDeclarativeMeta(DeclarativeMeta):
         super().__init__(classname, bases, dict_)
 
         # 添加 CouchDB 特定属性
-        if not hasattr(cls, "__abstract__") or not cls.__abstract__:
+        # 只跳过在自己的 dict 中明确定义了 __abstract__ = True 的类
+        is_abstract = dict_.get("__abstract__", False)
+
+        if not is_abstract:
             # 设置 CouchDB type 字段（默认使用表名）
             if not hasattr(cls, "_couchdb_type"):
                 cls._couchdb_type = getattr(cls, "__tablename__", classname.lower())
