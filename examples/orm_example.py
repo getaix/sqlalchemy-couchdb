@@ -69,7 +69,7 @@ class Post(Base):
 def create_session():
     """创建 Session"""
     # 创建 CouchDB 引擎
-    engine = create_engine("couchdb://admin:password@localhost:5984/mydb")
+    engine = create_engine("couchdb://admin:123456@localhost:5984/test_db")
 
     # 创建 Session 工厂
     SessionFactory = sessionmaker(engine)
@@ -378,8 +378,8 @@ def main():
     # 如果没有 CouchDB，示例将无法正常工作
 
     # CRUD 操作
-    # example_create()
-    # example_create_with_relationship()
+    example_create()
+    # example_create_with_relationship()  # 关系功能尚未完全实现
     # example_query()
     # example_update()
     # example_delete()
@@ -400,7 +400,8 @@ def main():
     # example_refresh()
 
     print("\n" + "=" * 80)
-    print("ORM 功能已实现，但需要连接到实际的 CouchDB 实例才能运行")
+    print("基础 ORM 功能演示完成！")
+    print("注意：关系（Relationship）功能仍在开发中")
     print("=" * 80)
 
 
