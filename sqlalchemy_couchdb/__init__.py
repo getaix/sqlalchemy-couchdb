@@ -41,7 +41,7 @@ from sqlalchemy_couchdb.exceptions import (
 )
 from sqlalchemy_couchdb.helpers import bulk_insert, async_bulk_insert
 
-__version__ = "0.1.2"
+__version__ = "0.1.3"
 __author__ = "getaix"
 __license__ = "MIT"
 

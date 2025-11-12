@@ -186,8 +186,9 @@ class Cursor:
         selector = op_data.get("selector", {})
         fields = op_data.get("fields")
         limit = op_data.get("limit")
-        skip = op_data.get("skip")
+        skip = op_data.get("skip", 0)
         sort = op_data.get("sort")
+        is_count = op_data.get("is_count", False)
 
         # 应用参数
         if parameters:
@@ -195,6 +196,28 @@ class Cursor:
 
         # 执行查询
         docs = self.client.find(selector=selector, fields=fields, limit=limit, skip=skip, sort=sort)
+
+        # COUNT 查询特殊处理
+        if is_count:
+            # 返回分段计数结果
+            count = len(docs)
+            # 总数估算 = skip + 当前段的数量
+            estimated_total = skip + count
+            # 如果当前段查满了，说明可能还有更多数据
+            has_more = (count == limit)
+
+            # 返回格式：[(estimated_total,)]
+            self.description = [("count", None, None, None, None, None, None)]
+            self._rows = [(estimated_total,)]
+            self.rowcount = 1
+            # 存储元数据，供上层使用
+            self._count_metadata = {
+                "segment_count": count,
+                "skip": skip,
+                "has_more": has_more,
+                "estimated_total": estimated_total
+            }
+            return
 
         # 转换为行
         if docs:

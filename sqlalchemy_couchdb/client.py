@@ -144,6 +144,7 @@ class SyncCouchDBClient(CouchDBClient):
         self.client: Optional[httpx.Client] = None
         self._index_manager = None
         self._view_manager = None
+        self._query_analyzer = None
 
     @property
     def index_manager(self):
@@ -162,6 +163,41 @@ class SyncCouchDBClient(CouchDBClient):
 
             self._view_manager = ViewManager(self)
         return self._view_manager
+
+    @property
+    def query_analyzer(self):
+        """获取查询分析器"""
+        if self._query_analyzer is None:
+            from sqlalchemy_couchdb.query_analyzer import QueryAnalyzer
+
+            self._query_analyzer = QueryAnalyzer()
+        return self._query_analyzer
+
+    def analyze_query_index_needs(self, compiled_query: str, format: str = "text") -> str:
+        """
+        分析编译后的查询并生成索引建议报告
+
+        参数:
+            compiled_query: 编译后的 Mango Query JSON 字符串
+            format: 报告格式 ("text", "json", "markdown")
+
+        返回:
+            格式化的索引建议报告
+
+        示例:
+            >>> query = '{"type": "select", "table": "users", "selector": {"age": {"$gt": 25}}, "sort": [{"name": "asc"}]}'
+            >>> report = client.analyze_query_index_needs(query)
+            >>> print(report)
+        """
+        from sqlalchemy_couchdb.query_analyzer import IndexAnalysisReport
+
+        analysis, recommendation = self.query_analyzer.analyze_and_recommend(compiled_query)
+
+        report = IndexAnalysisReport()
+        if recommendation:
+            report.add_recommendation(recommendation)
+
+        return report.generate_report(format=format)
 
     def connect(self) -> httpx.Client:
         """
@@ -226,16 +262,35 @@ class SyncCouchDBClient(CouchDBClient):
         示例:
             >>> client.create_document({"name": "Alice", "age": 30})
             {'id': 'abc123', 'rev': '1-xyz'}
+
+            >>> client.create_document({"_id": "user:001", "name": "Bob"})
+            {'id': 'user:001', 'rev': '1-xyz'}
         """
         # 使文档类型的缓存失效
         if self.cache and "type" in doc:
             self.cache.invalidate(doc["type"])
 
-        response = self.client.post(
-            self._build_db_url(),
-            json=doc,
-            headers={"Content-Type": "application/json"},
-        )
+        # 检查是否指定了 _id
+        if "_id" in doc and doc["_id"]:
+            # 有指定 _id，使用 PUT 请求到指定的文档 ID
+            doc_id = doc["_id"]
+            encoded_id = quote(doc_id, safe="")
+
+            # 创建文档副本，移除 _id 字段（CouchDB PUT 请求不需要文档体中的 _id）
+            doc_body = {k: v for k, v in doc.items() if k != "_id"}
+
+            response = self.client.put(
+                self._build_db_url(encoded_id),
+                json=doc_body,
+                headers={"Content-Type": "application/json"},
+            )
+        else:
+            # 没有指定 _id，使用 POST 请求让 CouchDB 自动生成 ID
+            response = self.client.post(
+                self._build_db_url(),
+                json=doc,
+                headers={"Content-Type": "application/json"},
+            )
 
         result = self._handle_response(response)
         return {"id": result.get("id"), "rev": result.get("rev")}
@@ -506,12 +561,42 @@ class AsyncCouchDBClient(CouchDBClient):
             return False
 
     async def create_document(self, doc: Dict[str, Any]) -> Dict[str, Any]:
-        """创建新文档（异步）"""
-        response = await self.client.post(
-            self._build_db_url(),
-            json=doc,
-            headers={"Content-Type": "application/json"},
-        )
+        """创建新文档（异步）
+
+        参数:
+            doc: 文档内容（字典）
+
+        返回:
+            包含 'id' 和 'rev' 的字典
+
+        示例:
+            >>> await client.create_document({"name": "Alice", "age": 30})
+            {'id': 'abc123', 'rev': '1-xyz'}
+
+            >>> await client.create_document({"_id": "user:001", "name": "Bob"})
+            {'id': 'user:001', 'rev': '1-xyz'}
+        """
+        # 检查是否指定了 _id
+        if "_id" in doc and doc["_id"]:
+            # 有指定 _id，使用 PUT 请求到指定的文档 ID
+            doc_id = doc["_id"]
+            encoded_id = quote(doc_id, safe="")
+
+            # 创建文档副本，移除 _id 字段（CouchDB PUT 请求不需要文档体中的 _id）
+            doc_body = {k: v for k, v in doc.items() if k != "_id"}
+
+            response = await self.client.put(
+                self._build_db_url(encoded_id),
+                json=doc_body,
+                headers={"Content-Type": "application/json"},
+            )
+        else:
+            # 没有指定 _id，使用 POST 请求让 CouchDB 自动生成 ID
+            response = await self.client.post(
+                self._build_db_url(),
+                json=doc,
+                headers={"Content-Type": "application/json"},
+            )
 
         result = self._handle_response(response)
         return {"id": result.get("id"), "rev": result.get("rev")}

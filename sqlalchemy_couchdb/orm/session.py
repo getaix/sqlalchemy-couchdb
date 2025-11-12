@@ -14,6 +14,7 @@ from enum import Enum
 from dataclasses import dataclass, field
 import logging
 from weakref import WeakValueDictionary
+from sqlalchemy import select, insert, update, delete, func
 
 
 logger = logging.getLogger(__name__)
@@ -223,65 +224,149 @@ class Session:
         """执行插入操作"""
         model_class = type(instance)
 
-        # 转换为 CouchDB 文档
-        if hasattr(model_class, "to_couchdb"):
-            doc = model_class.to_couchdb(instance)
-        else:
-            doc = self._instance_to_doc(instance)
+        # 构建 INSERT 语句
+        if not hasattr(model_class, "__table__"):
+            logger.warning(f"Model {model_class.__name__} has no __table__ attribute")
+            return
+
+        # 获取要插入的值
+        values = {}
+        for column in model_class.__table__.columns:
+            if hasattr(instance, column.name):
+                value = getattr(instance, column.name)
+                if value is not None:
+                    values[column.name] = value
+
+        # 构建 INSERT 语句
+        stmt = insert(model_class.__table__).values(**values)
 
         # 执行插入
-        # result = self.engine.execute(insert_statement)
+        try:
+            with self.engine.connect() as conn:
+                conn.execute(stmt)
+                conn.commit()
 
-        # 更新状态
-        obj_id = id(instance)
-        if obj_id in self._instance_states:
-            state = self._instance_states[obj_id]
-            state.state = ObjectState.PERSISTENT
-            state.is_modified = False
+            # 更新状态
+            obj_id = id(instance)
+            if obj_id in self._instance_states:
+                state = self._instance_states[obj_id]
+                state.state = ObjectState.PERSISTENT
+                state.is_modified = False
 
-        logger.debug(f"Inserted: {model_class.__name__}")
+            # 添加到身份映射
+            primary_key = self._get_primary_key(instance)
+            if primary_key:
+                self.identity_map.add(model_class, primary_key, instance)
+
+            logger.debug(f"Inserted: {model_class.__name__}")
+
+        except Exception as e:
+            logger.error(f"Failed to insert {model_class.__name__}: {e}")
+            raise
 
     def _flush_update(self, instance: Any) -> None:
         """执行更新操作"""
         model_class = type(instance)
 
-        # 转换为 CouchDB 文档
-        if hasattr(model_class, "to_couchdb"):
-            doc = model_class.to_couchdb(instance)
-        else:
-            doc = self._instance_to_doc(instance)
+        # 构建 UPDATE 语句
+        if not hasattr(model_class, "__table__"):
+            logger.warning(f"Model {model_class.__name__} has no __table__ attribute")
+            return
+
+        # 获取主键
+        primary_key_column = None
+        primary_key_value = None
+        for column in model_class.__table__.columns:
+            if column.primary_key:
+                primary_key_column = column
+                primary_key_value = getattr(instance, column.name, None)
+                break
+
+        if not primary_key_column or primary_key_value is None:
+            logger.warning(f"Cannot update {model_class.__name__} without primary key")
+            return
+
+        # 获取要更新的值
+        values = {}
+        for column in model_class.__table__.columns:
+            if not column.primary_key and hasattr(instance, column.name):
+                value = getattr(instance, column.name)
+                if value is not None:
+                    values[column.name] = value
+
+        # 构建 UPDATE 语句
+        stmt = (
+            update(model_class.__table__)
+            .where(primary_key_column == primary_key_value)
+            .values(**values)
+        )
 
         # 执行更新
-        # result = self.engine.execute(update_statement)
+        try:
+            with self.engine.connect() as conn:
+                conn.execute(stmt)
+                conn.commit()
 
-        # 更新状态
-        obj_id = id(instance)
-        if obj_id in self._instance_states:
-            state = self._instance_states[obj_id]
-            state.is_modified = False
+            # 更新状态
+            obj_id = id(instance)
+            if obj_id in self._instance_states:
+                state = self._instance_states[obj_id]
+                state.is_modified = False
 
-        logger.debug(f"Updated: {model_class.__name__}")
+            logger.debug(f"Updated: {model_class.__name__}")
+
+        except Exception as e:
+            logger.error(f"Failed to update {model_class.__name__}: {e}")
+            raise
 
     def _flush_delete(self, instance: Any) -> None:
         """执行删除操作"""
         model_class = type(instance)
 
+        # 构建 DELETE 语句
+        if not hasattr(model_class, "__table__"):
+            logger.warning(f"Model {model_class.__name__} has no __table__ attribute")
+            return
+
+        # 获取主键
+        primary_key_column = None
+        primary_key_value = None
+        for column in model_class.__table__.columns:
+            if column.primary_key:
+                primary_key_column = column
+                primary_key_value = getattr(instance, column.name, None)
+                break
+
+        if not primary_key_column or primary_key_value is None:
+            logger.warning(f"Cannot delete {model_class.__name__} without primary key")
+            return
+
+        # 构建 DELETE 语句
+        stmt = delete(model_class.__table__).where(primary_key_column == primary_key_value)
+
         # 执行删除
-        # result = self.engine.execute(delete_statement)
+        try:
+            with self.engine.connect() as conn:
+                conn.execute(stmt)
+                conn.commit()
 
-        # 从身份映射中移除
-        primary_key = self._get_primary_key(instance)
-        if primary_key:
-            self.identity_map.remove(model_class, primary_key)
+            # 从身份映射中移除
+            primary_key = self._get_primary_key(instance)
+            if primary_key:
+                self.identity_map.remove(model_class, primary_key)
 
-        # 更新状态
-        obj_id = id(instance)
-        if obj_id in self._instance_states:
-            state = self._instance_states[obj_id]
-            state.state = ObjectState.DETACHED
-            del self._instance_states[obj_id]
+            # 更新状态
+            obj_id = id(instance)
+            if obj_id in self._instance_states:
+                state = self._instance_states[obj_id]
+                state.state = ObjectState.DETACHED
+                del self._instance_states[obj_id]
 
-        logger.debug(f"Deleted: {model_class.__name__}")
+            logger.debug(f"Deleted: {model_class.__name__}")
+
+        except Exception as e:
+            logger.error(f"Failed to delete {model_class.__name__}: {e}")
+            raise
 
     def commit(self) -> None:
         """
@@ -460,10 +545,22 @@ class Query:
 
     def filter_by(self, **kwargs) -> "Query":
         """添加过滤条件（关键字参数形式）"""
+        # 获取模型类
+        if not self.entities:
+            return self
+
+        model_class = self.entities[0]
+        if not hasattr(model_class, "__table__"):
+            return self
+
         # 转换为过滤表达式
         for key, value in kwargs.items():
-            # 简化实现
-            pass
+            # 查找对应的列
+            if hasattr(model_class, key):
+                column = getattr(model_class, key)
+                # 创建相等条件
+                self._filters.append(column == value)
+
         return self
 
     def order_by(self, *criteria) -> "Query":
@@ -483,10 +580,83 @@ class Query:
 
     def all(self) -> List[Any]:
         """获取所有结果"""
+        # 获取模型类
+        if not self.entities:
+            return []
+
+        model_class = self.entities[0]
+        if not hasattr(model_class, "__table__"):
+            return []
+
+        # 构建 SELECT 语句
+        stmt = select(model_class.__table__)
+
+        # 添加过滤条件
+        for criterion in self._filters:
+            stmt = stmt.where(criterion)
+
+        # 添加排序
+        for order in self._order_by:
+            stmt = stmt.order_by(order)
+
+        # 添加限制和偏移
+        if self._limit_value is not None:
+            stmt = stmt.limit(self._limit_value)
+        if self._offset_value is not None:
+            stmt = stmt.offset(self._offset_value)
+
         # 执行查询
-        # results = self.session.engine.execute(select_statement)
-        # 简化实现
-        return []
+        with self.session.engine.connect() as conn:
+            result = conn.execute(stmt)
+            rows = result.fetchall()
+
+        # 将行转换为模型实例
+        instances = []
+        for row in rows:
+            # 从结果行创建模型实例
+            instance = self._row_to_instance(model_class, row)
+
+            # 添加到身份映射
+            primary_key = self.session._get_primary_key(instance)
+            if primary_key:
+                existing = self.session.identity_map.get(model_class, primary_key)
+                if existing:
+                    instance = existing
+                else:
+                    self.session.identity_map.add(model_class, primary_key, instance)
+
+                    # 设置对象状态为 PERSISTENT
+                    obj_id = id(instance)
+                    self.session._instance_states[obj_id] = InstanceState(
+                        obj=instance,
+                        state=ObjectState.PERSISTENT
+                    )
+
+            instances.append(instance)
+
+        return instances
+
+    def _row_to_instance(self, model_class: Type[Any], row: Any) -> Any:
+        """将数据库行转换为模型实例"""
+        # 创建实例（使用 __init__ 来正确初始化）
+        kwargs = {}
+
+        # 从行中提取数据
+        if hasattr(row, "_mapping"):
+            # SQLAlchemy 2.0 Row 对象
+            for column in model_class.__table__.columns:
+                if column.name in row._mapping:
+                    kwargs[column.name] = row._mapping[column.name]
+        else:
+            # 旧版本或字典
+            for column in model_class.__table__.columns:
+                if hasattr(row, column.name):
+                    kwargs[column.name] = getattr(row, column.name)
+
+        # 使用 __init__ 创建实例
+        instance = model_class(**kwargs)
+
+        return instance
 
     def first(self) -> Optional[Any]:
         """获取第一个结果"""
@@ -504,10 +674,27 @@ class Query:
 
     def count(self) -> int:
         """获取结果数量"""
+        # 获取模型类
+        if not self.entities:
+            return 0
+
+        model_class = self.entities[0]
+        if not hasattr(model_class, "__table__"):
+            return 0
+
+        # 构建 COUNT 语句
+        stmt = select(func.count()).select_from(model_class.__table__)
+
+        # 添加过滤条件
+        for criterion in self._filters:
+            stmt = stmt.where(criterion)
+
         # 执行计数查询
-        # result = self.session.engine.execute(count_statement)
-        # 简化实现
-        return 0
+        with self.session.engine.connect() as conn:
+            result = conn.execute(stmt)
+            count = result.scalar()
+
+        return count if count is not None else 0
 
 
 def sessionmaker(engine: Any, **kwargs) -> Type[Session]:

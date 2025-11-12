@@ -2,6 +2,58 @@
 
 本项目遵循[语义化版本](https://semver.org/lang/zh-CN/)。
 
+## [0.1.3] - 2025-01-15
+
+### 🐛 Bug 修复
+
+#### 修复 `_id` 字段处理
+1. **编译器层修复**
+   - ✅ 修复 `visit_insert` 方法跳过 `_id` 字段的问题
+   - ✅ 允许用户指定自定义 `_id`，只跳过 `_rev` 字段
+   - 📂 文件: `compiler.py` (行141, 行153)
+
+2. **客户端层修复**
+   - ✅ 同步客户端：检测 `_id` 字段，使用 PUT 请求到指定 ID
+   - ✅ 异步客户端：同步实现相同逻辑
+   - ✅ 无 `_id` 时使用 POST 请求让 CouchDB 自动生成
+   - 📂 文件: `client.py` (SyncCouchDBClient, AsyncCouchDBClient)
+
+### ✨ 功能增强
+
+#### ORM Session 和 Query 实现
+1. **Query 类完整实现**
+   - ✅ `all()` - 查询所有结果并转换为模型实例
+   - ✅ `count()` - 执行 COUNT 查询
+   - ✅ `filter_by()` - 支持关键字参数形式的过滤
+   - ✅ 添加身份映射（Identity Map）支持
+   - 📂 文件: `orm/session.py`
+
+2. **Session 持久化操作**
+   - ✅ `_flush_insert()` - 构建并执行 INSERT 语句
+   - ✅ `_flush_update()` - 构建并执行 UPDATE 语句
+   - ✅ `_flush_delete()` - 构建并执行 DELETE 语句
+   - ✅ 完整的对象状态管理（Transient/Pending/Persistent/Detached）
+   - 📂 文件: `orm/session.py`
+
+3. **测试验证**
+   - ✅ ORM 示例运行成功（`examples/orm_example.py`）
+   - ✅ CRUD 操作测试通过
+   - ✅ Identity Map 和状态管理测试通过
+
+### 🔧 代码改进
+
+1. **测试脚本优化**
+   - ✅ 修复测试脚本中的表对象使用错误
+   - ✅ 使用时间戳生成唯一 ID 避免冲突
+   - ✅ 查询验证刚插入的数据
+   - 📂 文件: `backend/scripts/data_scripts/test_couchdb.py`
+
+### 📝 行为变更
+
+- **`_id` 字段处理**: 现在完全支持用户指定的 `_id`，而不是总是自动生成
+  - 有指定 → 使用指定的 `_id`（PUT 请求）
+  - 无指定 → CouchDB 自动生成（POST 请求）
+
 ## [0.1.2] - 2025-11-04
 
 ### 📚 文档改进

@@ -225,26 +225,27 @@ def example_delete():
 def example_access_relationship():
     """访问关系示例"""
     print("\n=== 访问关系 ===")
+    print("(关系功能尚未完全实现)")
 
-    session = create_session()
+    # session = create_session()
 
-    # 查询用户
-    user = session.query(User).filter(User.name == "Alice").first()
+    # # 查询用户
+    # user = session.query(User).filter(User.name == "Alice").first()
 
-    if user:
-        # 访问用户的帖子（通过关系）
-        print(f"User {user.name} has {len(user.posts)} posts:")
-        for post in user.posts:
-            print(f"  - {post.title}")
+    # if user:
+    #     # 访问用户的帖子（通过关系）
+    #     print(f"User {user.name} has {len(user.posts)} posts:")
+    #     for post in user.posts:
+    #         print(f"  - {post.title}")
 
-    # 查询帖子
-    post = session.query(Post).filter(Post.title == "First Post").first()
+    # # 查询帖子
+    # post = session.query(Post).filter(Post.title == "First Post").first()
 
-    if post:
-        # 访问帖子的作者（通过关系）
-        print(f"Post '{post.title}' by {post.author.name}")
+    # if post:
+    #     # 访问帖子的作者（通过关系）
+    #     print(f"Post '{post.title}' by {post.author.name}")
 
-    session.close()
+    # session.close()
 
 
 # ============================================================================
@@ -380,24 +381,24 @@ def main():
     # CRUD 操作
     example_create()
     # example_create_with_relationship()  # 关系功能尚未完全实现
-    # example_query()
-    # example_update()
-    # example_delete()
+    example_query()
+    example_update()
+    example_delete()
 
     # 关系访问
-    # example_access_relationship()
+    example_access_relationship()
 
     # 事务
-    # example_transaction()
+    example_transaction()
 
     # Session 状态
-    # example_session_states()
+    example_session_states()
 
     # Identity Map
-    # example_identity_map()
+    example_identity_map()
 
     # 刷新对象
-    # example_refresh()
+    example_refresh()
 
     print("\n" + "=" * 80)
     print("基础 ORM 功能演示完成！")

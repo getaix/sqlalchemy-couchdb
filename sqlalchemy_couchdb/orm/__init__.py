@@ -80,6 +80,9 @@ from .relationship import (
 # Session
 from .session import Session, Query, sessionmaker, ObjectState, InstanceState, IdentityMap
 
+# Async Session
+from .async_session import CouchDBAsyncSession, async_sessionmaker
+
 
 __all__ = [
     # Declarative
@@ -105,4 +108,7 @@ __all__ = [
     "ObjectState",
     "InstanceState",
     "IdentityMap",
+    # Async Session
+    "CouchDBAsyncSession",
+    "async_sessionmaker",
 ]

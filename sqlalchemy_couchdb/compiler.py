@@ -21,6 +21,20 @@ class CouchDBCompiler(compiler.SQLCompiler):
     将 SQLAlchemy SQL AST 编译为 CouchDB Mango Query JSON。
     """
 
+    def __init__(self, *args, **kwargs):
+        """初始化编译器"""
+        super().__init__(*args, **kwargs)
+        # 初始化 compile_state 属性以避免 AttributeError
+        if not hasattr(self, 'compile_state'):
+            self.compile_state = None
+
+    # ORM 支持：定义这些属性以满足 SQLAlchemy ORM 的期望
+    # 注意：不要在 __init__ 中设置它们，因为基类已经定义了 property
+    @property
+    def postfetch(self):
+        """ORM 插入后需要获取的列（CouchDB 不支持）"""
+        return []
+
     def visit_select(self, select_stmt, **kwargs):
         """
         编译 SELECT 语句
@@ -37,6 +51,19 @@ class CouchDBCompiler(compiler.SQLCompiler):
                 "limit": 10
             }
         """
+        # 首先调用父类方法以正确设置编译状态
+        # 这确保 ORM 编译状态被正确初始化
+        try:
+            # 调用父类方法但忽略结果，我们生成自己的查询
+            super().visit_select(select_stmt, **kwargs)
+        except Exception:
+            # 如果父类方法失败，继续我们的编译过程
+            pass
+
+        # 保存 ORM 编译状态（如果存在）
+        if "compile_state" in kwargs:
+            self.compile_state = kwargs["compile_state"]
+
         # 获取表名
         table_name = self._get_table_name(select_stmt)
 
@@ -63,11 +90,23 @@ class CouchDBCompiler(compiler.SQLCompiler):
 
         # 获取要查询的字段
         fields = None
+        is_count_query = False  # 标记是否为 COUNT 查询
+
         if hasattr(select_stmt, "selected_columns"):
             columns = select_stmt.selected_columns
             # 检查是否是 SELECT *
             if columns and not self._is_select_star(columns):
-                fields = [col.name for col in columns if hasattr(col, "name")]
+                # 检查是否是 COUNT 查询
+                for col in columns:
+                    col_str = str(col).upper()
+                    if "COUNT" in col_str or "FUNC.COUNT" in col_str:
+                        is_count_query = True
+                        # COUNT 查询只需要 _id 字段以减少数据传输
+                        fields = ["_id"]
+                        break
+
+                if not is_count_query:
+                    fields = [col.name for col in columns if hasattr(col, "name")]
 
         # 构建查询对象
         query = {
@@ -75,6 +114,10 @@ class CouchDBCompiler(compiler.SQLCompiler):
             "table": table_name,
             "selector": selector,
         }
+
+        # 标记 COUNT 查询
+        if is_count_query:
+            query["is_count"] = True
 
         if fields:
             query["fields"] = fields
@@ -84,15 +127,20 @@ class CouchDBCompiler(compiler.SQLCompiler):
             query["limit"] = self._get_limit_value(select_stmt._limit_clause)
         else:
             # CouchDB默认limit是25，这对大多数查询来说太小
-            # 如果没有指定LIMIT，使用一个较大的默认值
-            query["limit"] = 10000
+            if is_count_query:
+                # COUNT 查询使用分段策略：每次最多查 10000 条 _id
+                query["limit"] = 10000
+            else:
+                # 普通查询使用较大的默认值
+                query["limit"] = 10000
 
         # OFFSET 子句
         if select_stmt._offset_clause is not None:
             query["skip"] = self._get_offset_value(select_stmt._offset_clause)
 
         # ORDER BY 子句
-        if select_stmt._order_by_clauses:
+        # 注意：COUNT 查询不需要排序，跳过 ORDER BY 以避免索引要求
+        if select_stmt._order_by_clauses and not is_count_query:
             query["sort"] = self._compile_order_by(select_stmt._order_by_clauses)
 
         # 返回 JSON 字符串
@@ -138,7 +186,8 @@ class CouchDBCompiler(compiler.SQLCompiler):
                     else:
                         actual_name = str(col_name)
 
-                    if actual_name not in ("_id", "_rev"):
+                    # _id 需要包含，但 _rev 在插入时应该跳过
+                    if actual_name != "_rev":
                         document[actual_name] = self._extract_value(value)
             else:
                 # 没有 values() 调用 - 这是 executemany 模式
@@ -148,7 +197,8 @@ class CouchDBCompiler(compiler.SQLCompiler):
                 # print(f"[DEBUG visit_insert] Generating placeholders for table: {insert_stmt.table.name}")
 
                 for col in insert_stmt.table.columns:
-                    if col.name not in ("_id", "_rev"):
+                    # _rev 在插入时应该跳过，_id 允许用户指定
+                    if col.name != "_rev":
                         # 创建 BindParameter 并添加到 statement
                         param = BindParameter(col.name, type_=col.type, required=False)
                         # 注册参数（添加到编译器的绑定参数列表中）

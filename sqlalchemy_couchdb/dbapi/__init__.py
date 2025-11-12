@@ -18,6 +18,9 @@ from sqlalchemy_couchdb.dbapi.sync import Connection, Cursor
 from sqlalchemy_couchdb.dbapi.async_ import AsyncConnection, AsyncCursor
 from sqlalchemy_couchdb.client import SyncCouchDBClient, AsyncCouchDBClient
 
+# 标记为异步 DBAPI（SQLAlchemy 异步引擎检测需要）
+__asyncio__ = True
+
 # 导入异常类 (DB-API 2.0 要求)
 from sqlalchemy_couchdb.exceptions import (
     Warning,
