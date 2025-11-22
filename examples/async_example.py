@@ -14,7 +14,7 @@ SQLAlchemy-CouchDB 异步模式使用示例
 """
 
 import asyncio
-from sqlalchemy import Column, Integer, String, MetaData, Table, select, insert, update, delete
+from sqlalchemy import Column, Integer, String, MetaData, Table, select, insert, update, delete,NullPool
 from sqlalchemy.ext.asyncio import create_async_engine
 
 
@@ -26,8 +26,9 @@ async def basic_crud_example():
 
     # 创建异步引擎
     engine = create_async_engine(
-        "couchdb+async://admin:password@localhost:5984/test_db",
+        "couchdb+async://admin:123456@localhost:5984/test_db",
         echo=False,  # 设置为 True 可以看到 SQL 日志
+        poolclass=NullPool
     )
 
     # 定义表结构
@@ -91,7 +92,7 @@ async def query_features_example():
     print("=" * 60)
 
     engine = create_async_engine(
-        "couchdb+async://admin:password@localhost:5984/test_db", echo=False
+        "couchdb+async://admin:123456@localhost:5984/test_db", echo=False, poolclass=NullPool
     )
 
     metadata = MetaData()
@@ -176,7 +177,7 @@ async def concurrent_operations_example():
     print("=" * 60)
 
     engine = create_async_engine(
-        "couchdb+async://admin:password@localhost:5984/test_db", echo=False
+        "couchdb+async://admin:123456@localhost:5984/test_db", echo=False, poolclass=NullPool
     )
 
     metadata = MetaData()
@@ -238,7 +239,7 @@ async def connection_management_example():
     print("=" * 60)
 
     engine = create_async_engine(
-        "couchdb+async://admin:password@localhost:5984/test_db", echo=False
+        "couchdb+async://admin:123456@localhost:5984/test_db", echo=False, poolclass=NullPool
     )
 
     # 使用上下文管理器
